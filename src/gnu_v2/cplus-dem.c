@@ -37,6 +37,7 @@ Boston, MA 02111-1307, USA.  */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include "cplus-dem.h"
 #undef CURRENT_DEMANGLING_STYLE
@@ -420,6 +421,7 @@ static int
 	consume_count(type)
 		const char **type;
 {
+	int val = 0;
 	int count = 0;
 
 	if (!isdigit((unsigned char)**type))
@@ -427,20 +429,16 @@ static int
 
 	while (isdigit((unsigned char)**type)) {
 		count *= 10;
-
-		/* Check for overflow.
-		   We assume that count is represented using two's-complement;
-		   no power of two is divisible by ten, so if an overflow occurs
-		   when multiplying by ten, the result will not be a multiple of
-		   ten.  */
-		if ((count % 10) != 0) {
+		val = **type - '0';
+		count += val;
+		(*type)++;
+		
+		/* Check for overflow */
+		if (count > ((INT_MAX - val) / 10)) {
 			while (isdigit((unsigned char)**type))
 				(*type)++;
 			return -1;
 		}
-
-		count += **type - '0';
-		(*type)++;
 	}
 
 	return (count);
